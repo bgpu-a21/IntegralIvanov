@@ -1,5 +1,6 @@
-package ip.ivanov.danil;
-
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 // Программа для численного интегрирования функции f(x) = exp(x) методом трапеций на отрезке [0, 5] с шагом 10E-6 и использованием многопоточности.
 
 public class Integration {
@@ -8,18 +9,39 @@ public class Integration {
         return Math.exp(x); // Вычисляем экспоненту от x
     }
 
+    static class Result{
+        int threads;
+        long time;
+        public Result(int threads, long time){
+            this.threads = threads;
+            this.time = time;
+        }
+    }
+
     public static void main(String[] args) {
         // Пределы интегрирования [a, b]
-        double a = 0.0; 
-        double b = 5.0; 
+        double a = 0.0;
+        double b = 5.0;
         double h = 1e-6; // Шаг интегрирования 10^-6
+        List<Result> results = new ArrayList<>();
 
         // Запуск интегрирования с различным количеством потоков от 1 до 20
+
         for (int n = 1; n <= 20; n++) {
             long startTime = System.currentTimeMillis(); // Время начала
-            double result = integrate(a, b, h, n); // Вызываем метод интегрирования
+            double result = integrate(a, b, h, n);
             long endTime = System.currentTimeMillis(); // Время окончания
-            System.out.println(n + " - " + (endTime - startTime) + " мс."); // Выводим количество потоков и время выполнения
+            long timeTaken = endTime - startTime;
+
+            results.add(new Result(n, timeTaken));
+
+            //System.out.println(n + " - " + (endTime - startTime) + " мс. Результат: " + result); // Выводим количество потоков и время выполнения
+        }
+        results.sort(Comparator.comparingLong(result -> result.time));
+
+        System.out.println("Результат ");
+        for (Result result : results){
+            System.out.println("Поток: " +result.threads + "; Время выполнения: " + result.time + "мс.");
         }
     }
 
@@ -48,20 +70,19 @@ public class Integration {
             threadArray[i].start(); // Запуск потока
         }
 
-        // Ожидание завершения всех потоков
+
         for (int i = 0; i < threads; i++) {
             try {
-                threadArray[i].join(); // Ожидаем завершения потока
+                threadArray[i].join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
-        // Суммируем результаты всех потоков
         for (double sum : results) {
             totalSum += sum;
         }
 
-        return totalSum; // Возвращаем итоговый результат интегрирования
+        return totalSum;
     }
 }
